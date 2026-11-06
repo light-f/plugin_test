@@ -1,0 +1,140 @@
+{
+  "manifestVersion": 2,
+  "id": "tg-boundary-lab",
+  "version": "0.1.0",
+  "installables": { "cli": [] },
+  "cowork": {
+    "displayName": "边界值工坊",
+    "category": "tools",
+    "icon": "https://brainmaker-test.s3v2.nie.netease.com/brainmaker/test/1793950001290-avatar.png",
+    "color": "blue",
+    "desc": "填字段规则，自动生成边界值、异常值与优先级用例，一键复制 Markdown、下载 CSV 或发到对话；纯本地计算，适合发给外部开发者试用。"
+  },
+  "subcapabilities": [
+    {
+      "id": "main",
+      "resources": {},
+      "views": [
+        {
+          "id": "main",
+          "title": "边界值工坊",
+          "url": "http://127.0.0.1:5180/index.html",
+          "permissions": ["chat.compose"],
+          "secrets": [],
+          "actions": [
+            {
+              "name": "getMatrix",
+              "description": "读取当前配置与生成的用例矩阵：config、lang、summary（total/p0/p1/p2）与 rows（id/category/input/expected/priority/note/include）。",
+              "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false }
+            },
+            {
+              "name": "setConfig",
+              "description": "修改字段规则并立即重新生成，返回新的矩阵。只传需要改的字段；type 支持 number/decimal/date/string/enum。",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string", "maxLength": 64 },
+                  "type": { "type": "string", "enum": ["number", "decimal", "date", "string", "enum"] },
+                  "min": { "description": "下限：数值，或 date 类型的 YYYY-MM-DD" },
+                  "max": { "description": "上限：数值，或 date 类型的 YYYY-MM-DD" },
+                  "decimals": { "type": "integer", "minimum": 0, "maximum": 6 },
+                  "required": { "type": "boolean" },
+                  "values": { "description": "枚举取值：逗号分隔字符串或字符串数组" },
+                  "pattern": { "type": "string", "maxLength": 200 }
+                },
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "applyPreset",
+              "description": "套用内置预设并重新生成：amount / integer / filesize / date / string / id / enum。",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "preset": {
+                    "type": "string",
+                    "enum": ["amount", "integer", "filesize", "date", "string", "id", "enum"]
+                  }
+                },
+                "required": ["preset"],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "composeCases",
+              "description": "把当前勾选的用例（Markdown 表格）预填到本会话输入框，不自动发送。需要 chat.compose 权限。",
+              "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false }
+            },
+            {
+              "name": "getCsv",
+              "description": "读取当前勾选用例的 CSV 文本（带 BOM，列头随中英文切换）。",
+              "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false }
+            }
+          ],
+          "guide": {
+            "summary": "填字段规则或点预设 → 自动生成边界值矩阵 → 勾选保留行 → 复制 Markdown / 下载 CSV / 发到对话。",
+            "elements": [
+              { "id": "presets", "description": "字段类型预设按钮组", "locator": { "selector": "#presets" } },
+              { "id": "preset-amount", "description": "金额（两位小数）预设", "locator": { "selector": "#preset-amount" } },
+              { "id": "preset-integer", "description": "整数区间预设", "locator": { "selector": "#preset-integer" } },
+              { "id": "field", "description": "字段名输入框", "locator": { "selector": "#field" } },
+              { "id": "type", "description": "字段类型下拉框（number/decimal/date/string/enum）", "locator": { "selector": "#type" } },
+              { "id": "min", "description": "下限输入框", "locator": { "selector": "#min" } },
+              { "id": "max", "description": "上限输入框", "locator": { "selector": "#max" } },
+              { "id": "decimals", "description": "小数位下拉框（仅 decimal）", "locator": { "selector": "#decimals" } },
+              { "id": "required", "description": "必填字段复选框", "locator": { "selector": "#required" } },
+              { "id": "values", "description": "枚举取值输入框（逗号分隔，仅 enum）", "locator": { "selector": "#values" } },
+              { "id": "pattern", "description": "格式正则输入框（仅 string，可选）", "locator": { "selector": "#pattern" } },
+              { "id": "generate", "description": "生成用例按钮", "locator": { "selector": "#generate" } },
+              { "id": "count", "description": "当前勾选的用例条数", "locator": { "selector": "#count" } },
+              { "id": "table", "description": "用例表格", "locator": { "selector": "#table" } },
+              { "id": "copy-md", "description": "复制 Markdown 按钮", "locator": { "selector": "#copy-md" } },
+              { "id": "copy-csv", "description": "复制 CSV 按钮", "locator": { "selector": "#copy-csv" } },
+              { "id": "download", "description": "下载 CSV 按钮", "locator": { "selector": "#download" } },
+              { "id": "compose", "description": "发到对话按钮（预填到输入框，不发送）", "locator": { "selector": "#compose" } },
+              { "id": "status", "description": "操作结果提示", "locator": { "selector": "#status" } },
+              { "id": "error", "description": "配置错误提示", "locator": { "selector": "#error" } }
+            ],
+            "workflows": [
+              {
+                "id": "preset-to-markdown",
+                "title": "用预设快速生成并复制 Markdown",
+                "steps": [
+                  { "description": "点金额预设", "elementId": "preset-amount", "method": "click" },
+                  { "description": "确认用例条数大于 0", "elementId": "count", "method": "find" },
+                  { "description": "确认表格出现边界值行", "elementId": "table", "method": "find" },
+                  { "description": "复制 Markdown", "elementId": "copy-md", "method": "click" },
+                  { "description": "确认提示已复制", "elementId": "status", "method": "find" }
+                ],
+                "successCriteria": ["#count 显示大于 0 的数字", "#status 显示已复制到剪贴板"]
+              },
+              {
+                "id": "custom-rule",
+                "title": "自定义字段规则并生成",
+                "steps": [
+                  { "description": "填写字段名", "elementId": "field", "method": "type" },
+                  { "description": "选择类型", "elementId": "type", "method": "select" },
+                  { "description": "填写下限", "elementId": "min", "method": "type" },
+                  { "description": "填写上限", "elementId": "max", "method": "type" },
+                  { "description": "点生成", "elementId": "generate", "method": "click" },
+                  { "description": "核验表格与条数", "elementId": "count", "method": "find" }
+                ],
+                "successCriteria": ["#error 为空", "#count 显示大于 0 的数字"]
+              },
+              {
+                "id": "export-csv",
+                "title": "导出 CSV 给用例库",
+                "steps": [
+                  { "description": "确认已有生成结果", "elementId": "count", "method": "find" },
+                  { "description": "点下载 CSV", "elementId": "download", "method": "click" },
+                  { "description": "核验提示", "elementId": "status", "method": "find" }
+                ],
+                "successCriteria": ["#status 显示已下载 boundary-*.csv"]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

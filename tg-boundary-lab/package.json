@@ -1,0 +1,12 @@
+{
+  "name": "tg-boundary-lab-plugin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "天工插件：边界值 / 测试数据生成器（静态页面 + 本地服务）",
+  "scripts": {
+    "test": "node --test tests/boundary-core.test.mjs",
+    "serve": "node serve.mjs",
+    "check": "node ci/check-manifest.mjs"
+  }
+}

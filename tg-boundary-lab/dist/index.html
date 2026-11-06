@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>边界值工坊 · Boundary Lab</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --border: #e3e6ef;
+        --text: #1b1f2e;
+        --dim: #6b7280;
+        --accent: #4f46e5;
+        --accent-soft: #ecebff;
+        --code-bg: #f3f4f8;
+        --p0: #dc2626;
+        --p0-bg: #fee2e2;
+        --p1: #b45309;
+        --p1-bg: #fef3c7;
+        --p2: #4b5563;
+        --p2-bg: #eef0f5;
+        --ok: #047857;
+      }
+      html[data-theme="dark"] {
+        --bg: #14161d;
+        --card: #1c1f2a;
+        --border: #2c3142;
+        --text: #e9ebf4;
+        --dim: #9aa1b4;
+        --accent: #a5a1ff;
+        --accent-soft: #2a2745;
+        --code-bg: #232734;
+        --p0: #fca5a5;
+        --p0-bg: #43262a;
+        --p1: #fcd34d;
+        --p1-bg: #40341f;
+        --p2: #c3c9d8;
+        --p2-bg: #2a2f3d;
+        --ok: #6ee7b7;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 14px 14px 20px;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.5 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+      }
+      .app { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+      header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+      h1 { margin: 0; font-size: 16px; letter-spacing: .01em; }
+      .sub { margin: 3px 0 0; color: var(--dim); font-size: 11.5px; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 11px;
+      }
+      .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+      .chip {
+        font: inherit; font-size: 12px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .chip:hover { border-color: var(--accent); color: var(--accent); }
+      .chip.active { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+      .grid label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--dim); }
+      .grid label.wide { grid-column: 1 / -1; }
+      .grid label.inline { flex-direction: row; align-items: center; gap: 6px; color: var(--text); font-size: 12px; }
+      input[type="text"], input[type="number"], select {
+        font: inherit;
+        font-size: 12.5px;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 8px;
+        width: 100%;
+      }
+      input:focus-visible, select:focus-visible, button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+      .hidden { display: none !important; }
+      .row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      button {
+        font: inherit;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 11px;
+        cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); color: var(--accent); }
+      button.primary { background: var(--accent); color: #fff; border-color: transparent; font-weight: 600; }
+      button.primary:hover { filter: brightness(1.07); color: #fff; }
+      button:disabled { opacity: .45; cursor: not-allowed; }
+      #error { color: var(--p0); font-size: 11.5px; }
+      #status { color: var(--ok); font-size: 11.5px; }
+      .summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--dim); }
+      .summary b { color: var(--text); font-size: 13px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+      .table-wrap { overflow: auto; max-height: 46vh; border: 1px solid var(--border); border-radius: 9px; }
+      table { border-collapse: collapse; width: 100%; font-size: 12px; }
+      thead th {
+        position: sticky; top: 0;
+        background: var(--code-bg);
+        color: var(--dim);
+        font-weight: 600;
+        text-align: left;
+        padding: 6px 7px;
+        white-space: nowrap;
+        font-size: 11px;
+      }
+      tbody td { padding: 5px 7px; border-top: 1px solid var(--border); vertical-align: top; }
+      tbody tr.off td { opacity: .42; }
+      td.id { color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+      td.input code {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 11.5px;
+        background: var(--code-bg);
+        border-radius: 4px;
+        padding: 1px 4px;
+        word-break: break-all;
+      }
+      td.input code.empty { color: var(--dim); font-style: italic; }
+      .badge { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
+      .badge.P0 { color: var(--p0); background: var(--p0-bg); }
+      .badge.P1 { color: var(--p1); background: var(--p1-bg); }
+      .badge.P2 { color: var(--p2); background: var(--p2-bg); }
+      .note { margin: 0; color: var(--dim); font-size: 11px; line-height: 1.6; }
+      .note code { background: var(--code-bg); border-radius: 4px; padding: 0 4px; }
+      @media (max-width: 430px) {
+        .grid { grid-template-columns: 1fr; }
+        .grid label.wide { grid-column: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div>
+          <h1 data-i18n="title">边界值工坊</h1>
+          <p class="sub" data-i18n="sub">填规则 → 自动生成边界值 / 异常 / 优先级 → 复制或下载，纯本地计算</p>
+        </div>
+        <button id="lang" type="button" aria-label="切换中英文">EN</button>
+      </header>
+
+      <section class="card">
+        <div class="presets" id="presets" aria-label="字段类型预设"></div>
+        <div class="grid">
+          <label>
+            <span data-i18n="field">字段名</span>
+            <input id="field" type="text" autocomplete="off" spellcheck="false" />
+          </label>
+          <label>
+            <span data-i18n="type">类型</span>
+            <select id="type">
+              <option value="number">number</option>
+              <option value="decimal">decimal</option>
+              <option value="date">date</option>
+              <option value="string">string</option>
+              <option value="enum">enum</option>
+            </select>
+          </label>
+          <label id="wrap-min">
+            <span data-i18n="min">下限</span>
+            <input id="min" type="text" autocomplete="off" />
+          </label>
+          <label id="wrap-max">
+            <span data-i18n="max">上限</span>
+            <input id="max" type="text" autocomplete="off" />
+          </label>
+          <label id="wrap-decimals">
+            <span data-i18n="decimals">小数位</span>
+            <select id="decimals">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </label>
+          <label class="inline" id="wrap-required">
+            <input id="required" type="checkbox" />
+            <span data-i18n="required">必填字段</span>
+          </label>
+          <label class="wide hidden" id="wrap-values">
+            <span data-i18n="values">枚举取值（逗号分隔）</span>
+            <input id="values" type="text" autocomplete="off" spellcheck="false" />
+          </label>
+          <label class="wide hidden" id="wrap-pattern">
+            <span data-i18n="pattern">格式正则（可选）</span>
+            <input id="pattern" type="text" autocomplete="off" spellcheck="false" />
+          </label>
+        </div>
+        <div class="row">
+          <button id="generate" class="primary" type="button" data-i18n="generate">生成用例</button>
+          <span id="error" role="alert"></span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="summary">
+          <b id="count">0</b><span data-i18n="cases">条用例</span>
+          <span id="p0count">P0 0</span>
+          <span id="p1count">P1 0</span>
+          <span id="p2count">P2 0</span>
+        </div>
+        <div class="actions">
+          <button id="copy-md" type="button" data-i18n="copyMd">复制 Markdown</button>
+          <button id="copy-csv" type="button" data-i18n="copyCsv">复制 CSV</button>
+          <button id="download" type="button" data-i18n="download">下载 CSV</button>
+          <button id="compose" type="button" data-i18n="compose">发到对话</button>
+        </div>
+        <span id="status" role="status" aria-live="polite"></span>
+        <div class="table-wrap">
+          <table id="table">
+            <thead>
+              <tr>
+                <th aria-label="选择"></th>
+                <th data-i18n="thId">用例</th>
+                <th data-i18n="thCategory">类别</th>
+                <th data-i18n="thInput">输入</th>
+                <th data-i18n="thExpected">预期</th>
+                <th data-i18n="thPriority">优先级</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p class="note" data-i18n="note">
+        所有计算在本页完成，不上传任何数据。取消勾选的行不会进入复制、下载与发到对话的内容；
+        CSV 带 BOM，可直接用 Excel 打开。
+      </p>
+    </div>
+
+    <script src="./tiangong-bridge.js"></script>
+    <script src="./plugin.js"></script>
+    <script type="module" src="./boundary-ui.js"></script>
+  </body>
+</html>
